@@ -24,6 +24,28 @@ def fetch_img_in_mask(img, mask):
     return img
 
 
+# 將邊界框加入到圖片中
+def add_bounding_box(img, mask):
+    min_area = 750  # 偵測輪廓的最小面積
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        if cv2.contourArea(cnt) < min_area:
+            continue
+
+        (x, y, w, h) = cv2.boundingRect(cnt)
+        img = cv2.rectangle(img.copy(), (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+    return img
+
+
+# 新增輪廓到圖片中
+def add_contours(img, mask):
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    img = cv2.drawContours(img.copy(), contours, -1, [0, 0, 255], 3)
+    return img
+
+
 # 使用 MOG2 來回傳影像中的移動物件
 def get_MOG2_img(img):
     fg_mask = back_sub_MOG2.apply(img)
@@ -39,28 +61,31 @@ def get_morph_MOG2_img(img):
     return img
 
 
-def get_MOG2_img_in_bounding_box(img):
+# 在 MOG2 影像中加入邊界框
+def get_MOG2_img_with_contours(img):
     fg_mask = back_sub_MOG2.apply(img)
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
+    img = add_contours(img, fg_mask)
 
-    contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return img
 
-    # 畫出輪廓
-    # img = cv2.drawContours(img.copy(), contours, -1, [0, 0, 255], 5)
 
-    min_area = 1000  # 偵測輪廓的最小面積
-
-    for cnt in contours:
-        if cv2.contourArea(cnt) < min_area:
-            continue
-
-        (x, y, w, h) = cv2.boundingRect(cnt)
-        img = cv2.rectangle(img.copy(), (x, y), (x + w, y + h), (0, 0, 255), 2)
+# 在 MOG2 影像中加入邊界框
+def get_MOG2_img_with_bounding_box(img):
+    fg_mask = back_sub_MOG2.apply(img)
+    fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
+    img = add_bounding_box(img, fg_mask)
 
     return img
 
 
 # 啟動相機
+# 輸入參數可使用
+# 1. get_MOG2_img
+# 2. get_morph_MOG2_img
+# 3. get_MOG2_img_with_contours
+# 4. get_MOG2_img_with_bounding_box
+# 查看其結果
 def run_camera(img_process_fun):
     cam = cv2.VideoCapture(0)
 
@@ -98,7 +123,10 @@ def run_camera(img_process_fun):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    run_camera(get_MOG2_img_in_bounding_box)
+    run_camera(get_MOG2_img)
+    run_camera(get_morph_MOG2_img)
+    run_camera(get_MOG2_img_with_contours)
+    run_camera(get_MOG2_img_with_bounding_box)
 
 # 參考資料:
 # 背景減法器-1 https://www.twblogs.net/a/5db37a70bd9eee310da04dfb
