@@ -41,8 +41,15 @@ def add_bounding_box(img, mask):
 
 # 新增輪廓到圖片中
 def add_contours(img, mask):
+    min_area = 750  # 偵測輪廓的最小面積
+
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    img = cv2.drawContours(img.copy(), contours, -1, [0, 0, 255], 3)
+    for cnt in contours:
+        if cv2.contourArea(cnt) < min_area:
+            continue
+
+        img = cv2.drawContours(img.copy(), cnt, -1, [0, 0, 255], 3)
+
     return img
 
 
@@ -61,7 +68,7 @@ def get_morph_MOG2_img(img):
     return img
 
 
-# 在 MOG2 影像中加入邊界框
+# 在 MOG2 影像中加入輪廓
 def get_MOG2_img_with_contours(img):
     fg_mask = back_sub_MOG2.apply(img)
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
