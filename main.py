@@ -150,3 +150,5 @@ if __name__ == '__main__':
 # https://chtseng.wordpress.com/2016/12/05/opencv-contour%E8%BC%AA%E5%BB%93/
 # 畫矩形
 # https://shengyu7697.github.io/python-opencv-rectangle/
+# 此專案 github 網址
+# https://github.com/trinagle1289/Practical_Application_Of_Python_Programming-Final_assignment
